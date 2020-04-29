@@ -1,61 +1,44 @@
-#![cfg_attr(debug_assertions, allow(dead_code, unused_imports))]
+use std::{thread, time};
 
-use iota_streams::{
-    app_channels::api::tangle::{Author}
-};
-use iota_lib_rs::prelude::iota_client;
-use iota_streams::app::transport::tangle::client::SendTrytesOptions;
-use crate::author::announce::start_a_new_channel;
-use crate::author::send_message::send_signed_message;
-mod author;
+mod channel_lite_writer;
+mod channel_lite_reader;
 
 fn main() {
 
-    //  -------- IOTA network settings ---------
+    //create the channel
+    let seed = "AUTHOR9SEED";
+    let node = "https://nodes.devnet.iota.org:443";
+    let mut channel_writer = channel_lite_writer::Channel::new(seed, node);
+    
+    // open the channel
+    let announce_identifier = channel_writer.open().unwrap();
+    println!("announce_identifier: {}", announce_identifier);
 
-    // Connect to an IOTA node
-    let mut client = iota_client::Client::new("https://nodes.devnet.iota.org:443");
+    // get channel address
+    let channel_address: String = channel_writer.get_channel_address();
+    println!("channel_address: {}", channel_address);
 
-    // Change the default settings to use a lower minimum weight magnitude for the Devnet
-    let mut send_opt = SendTrytesOptions::default();
-    // default is 14
-    send_opt.min_weight_magnitude = 9;
-    send_opt.local_pow = false;
+    // start writing to channel
+    for _i in 0..10{
+        let payload: &str = &format!("PAYLOAD");
+        let signed_packet_identifier = channel_writer.write(&announce_identifier, payload, "").unwrap();
+        println!("signed_packet_identifier: {}", signed_packet_identifier);
 
-    // --------------- Author -------------------
-
-    // Create a new channel
-    // REPLACE THE SECRET WITH YOUR OWN
-    let mut author = Author::new("MYAUTHORSECRET", 3, true);
-
-    let channel_address = author.channel_address().to_string();
-    println!("Channel address: {}", &channel_address);
-
-    // Send the `Announce` message
-    match start_a_new_channel(&mut author, &mut client, send_opt) {
+        thread::sleep(time::Duration::from_millis(5));
+    }
+/*
+    let seed = "SUB9SEED";
+    let node = "https://nodes.devnet.iota.org:443";
+    let mut channel_reader: channel_lite_reader::Channel = channel_lite_reader::Channel::new(seed,node,channel_address);
+    match channel_reader.connect("ICOTSLXXTKVXDNWFPG9LOFUQRJS"){
         Ok(()) => (),
         Err(error) => println!("Failed with error {}", error),
     }
 
-    /*
 
-    // REPLACE WITH YOUR OWN MESSAGE IDENTIFIER
-    let announce_message_identifier = "RACLH9SDQZEYXOLWFG9WOLVDQHT";
-
-    let public_payload = "MYPUBLICMESSAGE";
-    let private_payload = "";
-
-    match send_signed_message(&mut author, channel_address, (&announce_message_identifier).to_string(), public_payload.to_string(), private_payload.to_string(), &mut client, send_opt){
+    match channel_reader.read(announce_identifier){
         Ok(()) => (),
         Err(error) => println!("Failed with error {}", error),
     }
-    */
-
-    /* Currently not working as Subscribe messages are inconsistent bundles.
-    let recv_opt = ();
-    match get_subscriptions_and_share_keyload(&mut author, &mut client, send_opt, recv_opt) {
-        Ok(()) => (),
-        Err(error) => println!("Failed with error {}", error),
-    }
-    */
+*/
 }
