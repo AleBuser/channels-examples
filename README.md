@@ -6,7 +6,7 @@ You can find documentation for these examples on the [IOTA documentation portal]
 
 # Goal
 The goal of this example is to show how a High-level API can reduce development complexity when working with IOTA-channels.
-The two classes `channel_lite_writer` and `channel_lite_reader` fix the Tangle as transport medium for the stream, removign the nead for the developer to se variables such as Minimum weight. 
+The two classes `channel_lite_writer` and `channel_lite_reader` fix the Tangle as transport medium for the stream, removing the need for the developer to set variables such as Minimum Weight Maginitude. 
 
 # How It Works
 
